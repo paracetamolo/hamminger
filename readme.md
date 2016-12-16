@@ -14,14 +14,20 @@ cd ..
 ```
 
 ## Details
-The script simply calls the three main commands of Main.java: 
-1. `hamming`: takes a vcf file `chr22.vcf` and a sample size `100`. 
-   The vcf file is split in chunks of the given size and a distance matrix is populated with the pair-wise hamming distances of all users.
-   For each sample i, the distance matrix is saved to `chr22_K100_N$i`. 
-   The probability of collision for each user is saved to `chr22_K100_prob`, one line per sample.
+The script simply calls the three main commands of Main.java:
+
+1. `hamming`: takes a vcf file `chr22.vcf` and a sample size `100`.
+
+	The vcf file is split in chunks of the given size and a distance matrix is populated with the pair-wise hamming distances of all users.
+	For each sample i, the distance matrix is saved to `chr22_K100_N$i`. 
+	The probability of collision for each user is saved to `chr22_K100_prob`, one line per sample.
+
 2. `merge`: takes a distance matrix file `chr22_K100_N1` and a size `10`.
-   Sums 10 distance matrices of chunk size `100` to obtains the matrix of chunk size `1000`.
+
+	Sums 10 distance matrices of chunk size `100` to obtains the matrix of chunk size `1000`.
+
 3. `collision`: takes the collisions probability file `chr22_K100_prob`.
-   For each user (for each column), computes average over samples and saves it to `chr22_K100_probs_avg`
-   Additionally prints some statistics over all distances of all users:
+
+	For each user (for each column), computes average over samples and saves it to `chr22_K100_probs_avg`.
+	Additionally prints some statistics over all distances of all users:
    `[average, variance, minimum, 1st quartile, median, 3rd quartile, maximum]`
