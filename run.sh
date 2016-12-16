@@ -2,16 +2,20 @@
 
 set -e
 
-CHR=chr22.vcf #chromosome file from 1000genomes project, uncompressed
-NAME=${CHR%.vcf}
-DIR=data
+CORES=3
 
-LIB=/usr/share/maven-repo/commons-io/commons-io/2.5/commons-io-2.5.jar
+if [[ ( -z $1 ) || ( ! -r $1 ) ]]; then echo 'Pass the vcf uncompressed file.'; exit 1; fi
 
+NAME=${1%.vcf} #chromosome file from 1000genomes project, uncompressed
+
+
+# compile
+LIB=/usr/share/java/commons-io.jar
 rm -rf bin *.class
 mkdir -p bin
 javac -cp .:$LIB -Xlint:unchecked -d bin Main.java
 
+#run
 main () {
 	java -cp .:$LIB:bin Main $*;
 
@@ -19,10 +23,14 @@ main () {
 	#  uptime) 2>&1 | tee run.log
 }
 
+echo "Hamming ${NAME}"
+main hamming ${NAME}.vcf 100 $CORES
 
-main hamming data/$NAME.vcf 100
-main merge ${DIR}/${NAME}_K100_N1 10
-main merge ${DIR}/${NAME}_K1000_N1 10
-main collision ${DIR}/${NAME}_K100_probs
-main collision ${DIR}/${NAME}_K1000_probs
-main collision ${DIR}/${NAME}_K10000_probs
+echo "Merging"
+main merge ${NAME}_K100_N1 10
+main merge ${NAME}_K1000_N1 10
+
+for size in 100 1000 10000; do
+	echo "collisions for size $size"
+	main collision ${NAME}_K${size}_probs
+done

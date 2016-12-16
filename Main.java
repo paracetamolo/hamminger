@@ -111,20 +111,22 @@ class Vcf {
 class Commands {
 	
 	/**
-	   called as: hamminger chr22.vcf 100
+	   call as: hamminger chr22.vcf 100 3
 	   produces: chr22_K100_N{1...n} and chr22_K100_prob
 
 	   Parses the vcf file chr22.vcf and splits it in contiguous samples of size 100. 
 	   For each sample computes all the pair-wise hamming distances for all the 2504 users.
 	   For each sample i, the distance matrix is saved to chr22_K100_N$i. 
 	   The probability of collision for each user is saved to chr22_K100_prob, one line per sample.
+	   Last argument is the number of cores to use concurrently.
 	*/
 	public static void hamminger(String[] args) throws Exception {
 
 		final String srcFileName = args[0]; // chr22.vcf
 		final int chunkSize = Integer.parseInt(args[1]); // size of genome or k
-
-		final Pool pool = new Pool(3,6);
+		final int nCores = Integer.parseInt(args[2]);
+		
+		final Pool pool = new Pool(nCores, nCores * 2);
 		final BufferedReader br = new BufferedReader(new FileReader(srcFileName));
 		final Iterator<String> it = new Vcf.SNPIterator(new LineIterator(br));
 		final ChunkIterator<String> cit = new ChunkIterator<String>(chunkSize, it);
@@ -166,8 +168,6 @@ class Commands {
 		int chunkSize = Integer.parseInt(tmp.substring(tmp.lastIndexOf("_")+2));
 		String base = tmp.substring(0,tmp.lastIndexOf("_"));
 
-		System.out.println(base + " " + chunkSize);
-		
 		final int nFiles = Integer.parseInt(args[1]);
 
 		String srcFile = base +"_K"+ chunkSize + "_N";
@@ -206,7 +206,7 @@ class Commands {
 	   different lines are produced by different samples, all of the same size. 
 	   For each user (for each column), computes average over samples and saves it to 
 	   chr22_K100_probs_avg
-	   Additionally prints some statistics over all distances of all users:
+	   Additionally prints some statistics over all probability of collision of all users:
 	   [average, variance, minimum, 1st quartile, median, 3rd quartile, maximum]
 	*/
 	public static void collisioner(String[] args) throws Exception {
@@ -231,13 +231,13 @@ class Commands {
 		bw.write(Util.arrayToCsv(usersAvg)+"\n");
 		bw.close();
 
-		List<Float> distances = new ArrayList<Float>();
+		List<Float> probs = new ArrayList<Float>();
 		for(int r=0; r<data.length; r++){
 			for(int c=0; c<data[0].length; c++){
-				distances.add(data[r][c]);
+				probs.add(data[r][c]);
 			}
 		}
-		List<Float> stat = Util.stat(distances);
+		List<Float> stat = Util.stat(probs);
 		System.out.println(Arrays.toString(stat.toArray()));
 	}
 }
